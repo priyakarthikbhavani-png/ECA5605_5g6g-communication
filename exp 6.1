@@ -1,0 +1,70 @@
+clc;
+clear;
+close all;
+
+% SISO and MIMO BER Performance
+
+SNR_dB = 0:2:20;
+
+BER_SISO = zeros(size(SNR_dB));
+BER_MIMO = zeros(size(SNR_dB));
+
+N = 10000;
+
+for k = 1:length(SNR_dB)
+
+    % Generate random binary data
+    bits = randi([0 1], N, 1);
+    tx = 2*bits - 1;
+
+    % Convert SNR from dB to linear scale
+    snrLin = 10^(SNR_dB(k)/10);
+
+    % SISO simulation
+    noise = randn(N,1)/sqrt(2*snrLin);
+    rx = tx + noise;
+
+    bits_hat = real(rx) > 0;
+    BER_SISO(k) = mean(bits_hat ~= bits);
+
+    % 2x2 MIMO simulation with diversity combining
+    H = (randn(2,2) + 1j*randn(2,2))/sqrt(2);
+
+    h_eff = sqrt(sum(abs(H(:)).^2)/2);
+
+    noise2 = randn(N,1)/sqrt(2*snrLin);
+    rx2 = h_eff*tx + noise2;
+
+    bits_hat2 = real(rx2) > 0;
+    BER_MIMO(k) = mean(bits_hat2 ~= bits);
+
+end
+
+% Display results
+disp('SISO AND MIMO BER RESULTS');
+disp('SNR (dB)       SISO BER       MIMO BER');
+
+disp([SNR_dB' BER_SISO' BER_MIMO']);
+
+% Plot BER performance
+figure;
+
+semilogy(SNR_dB, BER_SISO, 'o-', 'LineWidth', 2);
+hold on;
+
+semilogy(SNR_dB, BER_MIMO, 's-', 'LineWidth', 2);
+
+grid on;
+
+xlabel('SNR (dB)');
+ylabel('Bit Error Rate (BER)');
+title('SISO and MIMO BER Performance');
+
+legend('SISO', 'MIMO', 'Location', 'southwest');
+
+xlim([0 20]);
+ylim([1e-4 1]);
+
+hold off;
+
+disp('Simulation completed successfully.');
