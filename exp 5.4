@@ -1,0 +1,85 @@
+clc;
+clear;
+close all;
+
+% OBJECTIVE 4: Effect of Carrier Aggregation
+
+% Define component carrier bandwidth (MHz)
+BWcc = 20;
+
+% Define spectral efficiency (bits/s/Hz)
+SE = 4;
+
+% Number of component carriers
+CC = [1 2 3];
+
+% Calculate aggregated bandwidth and throughput
+AggBW = BWcc .* CC;
+Throughput = AggBW .* SE;
+
+% Display carrier aggregation results
+disp('CARRIER AGGREGATION RESULTS');
+disp('CC   Aggregated BW (MHz)   Throughput (Mbps)');
+disp([CC' AggBW' Throughput']);
+
+% Figure 1: Effect of carrier aggregation
+figure(1);
+
+bar(CC, Throughput, 0.6);
+grid on;
+
+xlabel('Number of Component Carriers');
+ylabel('Estimated Throughput (Mbps)');
+title('Effect of Carrier Aggregation on Throughput');
+
+xticks(CC);
+ylim([0 max(Throughput) * 1.2]);
+
+for k = 1:length(CC)
+    text(CC(k), Throughput(k), ...
+        sprintf('%.0f Mbps', Throughput(k)), ...
+        'HorizontalAlignment', 'center', ...
+        'VerticalAlignment', 'bottom');
+end
+
+% Compare different carrier bandwidths
+BW = [5 10 15 20];
+
+TP = BW .* SE;
+
+% Display bandwidth comparison
+disp(' ');
+disp('BANDWIDTH AND THROUGHPUT COMPARISON');
+disp('Bandwidth (MHz)   Throughput (Mbps)');
+disp([BW' TP']);
+
+% Figure 2: Throughput versus bandwidth
+figure(2);
+
+plot(BW, TP, 'o-', 'LineWidth', 2, ...
+    'MarkerSize', 8);
+
+grid on;
+xlabel('Carrier Bandwidth (MHz)');
+ylabel('Estimated Throughput (Mbps)');
+title('Throughput versus Component Carrier Bandwidth');
+
+xticks(BW);
+ylim([0 max(TP) * 1.2]);
+
+% Add throughput values to the plot
+for k = 1:length(BW)
+    text(BW(k), TP(k), ...
+        sprintf(' %d Mbps', TP(k)), ...
+        'VerticalAlignment', 'bottom');
+end
+
+% Print objective summary
+disp(' ');
+disp('OBJECTIVE 4: EFFECT OF CARRIER AGGREGATION');
+disp('Aggregating component carriers increases total bandwidth.');
+disp('Under the constant spectral-efficiency model,');
+disp('estimated throughput increases proportionally.');
+disp('Simulation completed successfully.');
+
+drawnow;
