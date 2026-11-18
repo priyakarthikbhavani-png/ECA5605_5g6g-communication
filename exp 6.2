@@ -1,0 +1,60 @@
+clc;
+clear;
+close all;
+
+% BER and Reliability Analysis
+
+SNR_dB = 0:2:20;
+Reliability = zeros(size(SNR_dB));
+BER_values = zeros(size(SNR_dB));
+
+N = 10000;
+
+for k = 1:length(SNR_dB)
+
+    % Generate random binary data
+    bits = randi([0 1], N, 1);
+    tx = 2*bits - 1;
+
+    % Convert SNR from dB to linear scale
+    snrLin = 10^(SNR_dB(k)/10);
+
+    % Add noise to the transmitted signal
+    noise = randn(N, 1)/sqrt(2*snrLin);
+    rx = tx + noise;
+
+    % Detect received bits
+    bhat = real(rx) > 0;
+
+    % Calculate BER and reliability
+    BER_values(k) = mean(bhat ~= bits);
+    Reliability(k) = 1 - BER_values(k);
+
+end
+
+% Display results in Command Window
+disp('BER AND RELIABILITY ANALYSIS');
+disp('SNR (dB)       BER       Reliability');
+
+disp([SNR_dB' BER_values' Reliability']);
+
+% Plot reliability versus SNR
+figure;
+
+plot(SNR_dB, Reliability, 'o-', 'LineWidth', 2, ...
+    'MarkerSize', 7);
+
+grid on;
+
+xlabel('SNR (dB)');
+ylabel('Reliability (1 - BER)');
+title('Communication Reliability vs SNR');
+
+xlim([0 20]);
+ylim([0.9 1.01]);
+
+% Display completion message
+disp(' ');
+disp('Simulation completed successfully.');
+
+drawnow;
