@@ -1,0 +1,41 @@
+clc;
+clear;
+close all;
+
+% Beamforming Gain for Different Steering Directions
+
+N = 8;                       % Number of antenna elements
+theta = -90:1:90;             % Observation angle
+steer = [-60 -30 0 30 60];    % Steering directions
+
+gain = zeros(size(steer));
+
+% Calculate simplified beamforming gain
+for k = 1:length(steer)
+    gain(k) = 10*log10(N) - 0.01*abs(steer(k));
+end
+
+% Display results
+disp('BEAMFORMING GAIN RESULTS');
+disp('Steering Angle (Degrees)    Gain (dB)');
+disp([steer' gain']);
+
+% Plot beamforming gain
+figure;
+
+plot(steer, gain, 'o-', 'LineWidth', 2, ...
+    'MarkerSize', 7);
+
+grid on;
+
+xlabel('Steering Angle (Degrees)');
+ylabel('Beamforming Gain (dB)');
+title('Beamforming Gain for Different Steering Directions');
+
+xlim([-70 70]);
+
+% Display completion message
+disp(' ');
+disp('Simulation completed successfully.');
+
+drawnow;
