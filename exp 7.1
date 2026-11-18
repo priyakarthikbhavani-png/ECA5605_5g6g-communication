@@ -1,0 +1,51 @@
+clc;
+clear;
+close all;
+
+% Simplified 5G NR Time-Frequency Resource Grid
+
+Nsc = 24;                  % Number of subcarriers
+Nsym = 14;                 % OFDM symbols per slot
+
+% Initialize resource grid
+resourceGrid = zeros(Nsym, Nsc);
+
+% Downlink assignment: OFDM symbols 1 to 10
+resourceGrid(1:10, :) = 1;
+
+% Uplink assignment: OFDM symbols 11 to 14
+resourceGrid(11:14, :) = 2;
+
+% Display resource grid
+figure;
+
+imagesc(1:Nsc, 1:Nsym, resourceGrid);
+
+set(gca, 'YDir', 'normal');
+
+xlabel('Subcarrier Index');
+ylabel('OFDM Symbol Index');
+title('Simplified 5G NR Time-Frequency Resource Grid');
+
+colormap([1 1 1; 0.2 0.6 0.9; 0.9 0.5 0.2]);
+
+caxis([0 2]);
+
+colorbar('Ticks', [0 1 2], ...
+    'TickLabels', {'Unused', 'Downlink', 'Uplink'});
+
+xticks(1:2:Nsc);
+yticks(1:Nsym);
+
+grid on;
+axis tight;
+
+% Display results in Command Window
+disp('SIMPLIFIED 5G NR RESOURCE GRID');
+disp(['Number of subcarriers: ', num2str(Nsc)]);
+disp(['Number of OFDM symbols: ', num2str(Nsym)]);
+disp('Symbols 1-10: Downlink');
+disp('Symbols 11-14: Uplink');
+disp('Simulation completed successfully.');
+
+drawnow;
