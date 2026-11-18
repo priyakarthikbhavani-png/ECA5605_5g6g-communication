@@ -1,0 +1,40 @@
+clc;
+clear;
+close all;
+
+% OFDM symbol indices
+symbols = 1:14;
+
+% Downlink and Uplink allocation
+DL = [1 1 1 1 1 1 1 1 1 1 0 0 0 0];
+UL = [0 0 0 0 0 0 0 0 0 0 1 1 1 1];
+
+% Plot DL and UL assignments
+figure(1);
+
+plot(symbols, DL, 'o-', 'LineWidth', 2, 'MarkerSize', 7);
+hold on;
+
+plot(symbols, UL, 's-', 'LineWidth', 2, 'MarkerSize', 7);
+
+grid on;
+xlim([1 14]);
+ylim([-0.2 1.2]);
+
+xticks(1:14);
+yticks([0 1]);
+
+xlabel('OFDM Symbol Index');
+ylabel('Allocation Status');
+title('Simplified Downlink and Uplink Assignment');
+
+legend('Downlink (DL)', 'Uplink (UL)', 'Location', 'best');
+
+hold off;
+
+% Display allocation table
+disp('OFDM Symbol Allocation');
+disp('Symbol    Downlink    Uplink');
+disp([symbols' DL' UL']);
+
+disp('Simulation completed successfully.');
