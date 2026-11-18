@@ -1,0 +1,70 @@
+
+clear;
+clc;
+close all;
+
+% Define study area and network parameters
+studyAreaKm2 = 4.0;
+userDensityPerKm2 = 30;
+maxUsersPerCell = 50;
+
+% Define cell radii in kilometres
+cellRadiiKm = [1.00, 0.75, 0.50];
+
+% Calculate total user demand
+totalDemand = studyAreaKm2 * userDensityPerKm2;
+
+% Calculate hexagonal cell area and estimated cell count
+cellAreaKm2 = (3 * sqrt(3) / 2) .* cellRadiiKm.^2;
+
+estimatedCells = ceil(studyAreaKm2 ./ cellAreaKm2);
+
+% Estimate network capacity and users served
+networkCapacity = estimatedCells .* maxUsersPerCell;
+
+usersServed = min(totalDemand, networkCapacity);
+
+% Create a results table
+results = table( ...
+    cellRadiiKm', ...
+    estimatedCells', ...
+    networkCapacity', ...
+    usersServed', ...
+    'VariableNames', { ...
+    'CellRadius_km', ...
+    'EstimatedNumberOfCells', ...
+    'EstimatedNetworkCapacity', ...
+    'EstimatedUsersServed'});
+
+% Display the results table
+disp('Estimated user capacity:');
+disp(results);
+
+% Create a grouped bar chart
+figure;
+
+bar(cellRadiiKm, ...
+    [networkCapacity', usersServed'], ...
+    'grouped');
+
+hold on;
+
+% Show total user demand
+yline(totalDemand, '--r', 'Total user demand');
+
+% Add chart labels and title
+xlabel('Cell radius (km)');
+ylabel('Number of users');
+
+title('Cell Size and Estimated User Capacity');
+
+legend( ...
+    'Network capacity', ...
+    'Users served', ...
+    'Total demand', ...
+    'Location', 'northwest');
+
+xticks(cellRadiiKm);
+grid on;
+
+hold off;
