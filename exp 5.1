@@ -1,0 +1,36 @@
+clc;
+clear;
+close all;
+
+% LTE-Advanced component carrier parameters
+BW1 = 20;       % Component carrier bandwidth (MHz)
+SE = 4;         % Spectral efficiency (bits/s/Hz)
+Ncc = 1;        % Number of component carriers
+
+% Calculate aggregate bandwidth and throughput
+BWagg = BW1 * Ncc;
+Throughput = BWagg * SE;
+
+% Display results
+disp('LTE-Advanced Single Carrier Throughput');
+fprintf('Bandwidth = %.2f MHz\n', BWagg);
+fprintf('Estimated Throughput = %.2f Mbps\n', Throughput);
+
+% Plot throughput
+figure;
+
+bar(Ncc, Throughput, 0.5);
+
+grid on;
+xlabel('Number of Component Carriers');
+ylabel('Estimated Throughput (Mbps)');
+title('LTE-Advanced Single Carrier Throughput');
+
+xticks(1);
+ylim([0 Throughput * 1.2]);
+
+text(Ncc, Throughput, sprintf(' %.0f Mbps', Throughput), ...
+    'HorizontalAlignment', 'center', ...
+    'VerticalAlignment', 'bottom');
+
+drawnow;
