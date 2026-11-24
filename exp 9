@@ -1,0 +1,134 @@
+clc; clear; close all;
+
+%% Input parameters
+rng(7);                         % Repeatable random results
+K          = 4;                 % Number of users
+NRB        = 24;                % Number of resource blocks
+BRB        = 180e3;             % Bandwidth per RB (Hz)
+Tslot      = 1e-3;              % Scheduling interval (s)
+etaMax     = 6;                 % Max spectral efficiency (bit/s/Hz)
+avgSNRdB   = [5 10 15 8];       % Average user SNR (dB)
+trafficMbps = [8 12 5 10];      % Traffic demand (Mbit/s)
+
+demandBits = trafficMbps(:) * 1e6 * Tslot;   % Bits demanded per slot (K x 1)
+
+%% Channel generation (K users x NRB resource blocks)
+snrDB     = avgSNRdB(:) + 4*randn(K, NRB);   % SNR in dB
+snrLinear = 10.^(snrDB/10);                  % dB -> linear
+
+% Capped Shannon spectral efficiency
+spectralEff = min(log2(1 + snrLinear), etaMax);
+
+% Achievable bits per RB in one scheduling interval
+bitsPerRB = BRB * spectralEff * Tslot;       % K x NRB
+
+strategyNames = {'Round Robin', 'Maximum CQI', 'Traffic Aware'};
+allocations   = zeros(K, NRB, 3);            % allocations(k,n,s) = 1 if RB n -> user k
+
+%% Strategy 1: Round-Robin
+for n = 1:NRB
+    user = mod(n-1, K) + 1;
+    allocations(user, n, 1) = 1;
+end
+
+%% Strategy 2: Maximum-CQI
+for n = 1:NRB
+    [~, user] = max(snrDB(:, n));
+    allocations(user, n, 2) = 1;
+end
+
+%% Strategy 3: Traffic-Aware (channel quality x remaining demand)
+servedBits = zeros(K, 1);
+for n = 1:NRB
+    remainingBits = max(demandBits - servedBits, 0);
+    if all(remainingBits <= 0)
+        break;                                % all demand satisfied
+    end
+    normDemand = remainingBits ./ demandBits; % fraction of demand still unmet
+    metric = bitsPerRB(:, n) .* normDemand;
+    metric(remainingBits <= 0) = -inf;        % skip satisfied users
+    [~, user] = max(metric);
+    allocations(user, n, 3) = 1;
+
+    delivered = min(bitsPerRB(user, n), remainingBits(user));
+    servedBits(user) = servedBits(user) + delivered;
+end
+
+%% Performance calculations
+userThroughputMbps  = zeros(K, 3);
+totalThroughputMbps = zeros(1, 3);
+jainFairness        = zeros(1, 3);
+utilization         = zeros(1, 3);
+unservedMbps        = zeros(K, 3);
+rbPerUser           = zeros(K, 3);
+
+for s = 1:3
+    A = allocations(:, :, s);
+
+    % Orthogonality check: each RB used by at most one user
+    assert(all(sum(A, 1) <= 1), 'Orthogonality violated in strategy %d', s);
+
+    deliveredBits = sum(A .* bitsPerRB, 2);
+    usefulBits    = min(deliveredBits, demandBits);        % cannot exceed demand
+
+    userThroughputMbps(:, s) = usefulBits / Tslot / 1e6;
+    totalThroughputMbps(s)   = sum(userThroughputMbps(:, s));
+
+    thr = userThroughputMbps(:, s);
+    jainFairness(s) = sum(thr)^2 / (K * sum(thr.^2) + eps);  % Jain's index
+
+    utilization(s)      = sum(A(:)) / NRB * 100;             % % of RBs used
+    unservedMbps(:, s)  = max(trafficMbps(:) - thr, 0);
+    rbPerUser(:, s)     = sum(A, 2);
+end
+
+%% Display results
+fprintf('\nOFDMA RESOURCE-BLOCK ALLOCATION RESULTS\n');
+fprintf('=======================================\n');
+for s = 1:3
+    fprintf('\n%s\n', strategyNames{s});
+    fprintf('User\tRBs\tThroughput (Mbit/s)\tUnserved (Mbit/s)\n');
+    for k = 1:K
+        fprintf('%d\t%d\t%8.3f\t\t%8.3f\n', k, rbPerUser(k,s), ...
+                userThroughputMbps(k,s), unservedMbps(k,s));
+    end
+    fprintf('Total throughput : %.3f Mbit/s\n', totalThroughputMbps(s));
+    fprintf('Total unserved   : %.3f Mbit/s\n', sum(unservedMbps(:,s)));
+    fprintf('Jain fairness    : %.4f\n', jainFairness(s));
+    fprintf('RB utilization   : %.2f %%\n', utilization(s));
+end
+
+%% Plot 1: Allocation maps
+figure('Name', 'OFDMA Resource-Block Allocation');
+for s = 1:3
+    subplot(3, 1, s);
+    userOfRB = nan(1, NRB);
+    for n = 1:NRB
+        k = find(allocations(:, n, s), 1);
+        if ~isempty(k), userOfRB(n) = k; end
+    end
+    stem(1:NRB, userOfRB, 'filled', 'LineWidth', 1.1);
+    grid on;
+    xlim([0.5 NRB+0.5]); ylim([0.5 K+0.5]); yticks(1:K);
+    xlabel('Resource-block index'); ylabel('Allocated user');
+    title(strategyNames{s});
+end
+
+%% Plot 2: User throughput comparison
+figure('Name', 'User Throughput Comparison');
+bar(userThroughputMbps);
+grid on;
+xlabel('User'); ylabel('Throughput (Mbit/s)');
+title('User Throughput Under Different Allocation Strategies');
+legend(strategyNames, 'Location', 'best');
+
+%% Plot 3: Total throughput and fairness
+figure('Name', 'System Throughput and Fairness');
+subplot(1, 2, 1);
+bar(totalThroughputMbps);
+set(gca, 'XTickLabel', strategyNames); grid on;
+ylabel('Total throughput (Mbit/s)'); title('Total System Throughput');
+subplot(1, 2, 2);
+bar(jainFairness);
+set(gca, 'XTickLabel', strategyNames); grid on;
+ylim([0 1]); ylabel('Jain index'); title('Jain''s Fairness Index');
