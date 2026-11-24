@@ -1,0 +1,118 @@
+clc;
+clear;
+close all;
+
+%% 6G IRS-ASSISTED COMMUNICATION SIMULATION
+
+c = 3e8;
+f = 100e9;
+Pt = 20;
+Gt = 10;
+Gr = 10;
+d1 = 50;
+d2 = 50;
+eta = 0.8;
+
+%% WAVELENGTH
+lambda = c/f;
+
+%% DIRECT COMMUNICATION DISTANCE
+d_direct = d1 + d2;
+
+%% FREE SPACE PATH LOSS - DIRECT LINK
+PL_direct = 20*log10(4*pi*d_direct/lambda);
+
+%% DIRECT RECEIVED POWER
+Pr_direct = Pt + Gt + Gr - PL_direct;
+
+%% IRS ELEMENT CONFIGURATION
+N = [16 32 64 128 256];
+
+%% TOTAL IRS PATH LOSS
+PL_IRS = 20*log10(4*pi*d1/lambda) + ...
+         20*log10(4*pi*d2/lambda);
+
+%% IRS GAIN
+IRS_gain = 10*log10(N*eta);
+
+%% IRS-ASSISTED RECEIVED POWER
+Pr_IRS = Pt + Gt + Gr - PL_IRS + IRS_gain;
+
+%% GAIN IMPROVEMENT
+Gain_improvement = Pr_IRS - Pr_direct;
+
+%% DISPLAY RESULTS
+fprintf('\n6G IRS-ASSISTED COMMUNICATION SIMULATION\n');
+fprintf('-----------------------------------------\n');
+
+fprintf('Carrier Frequency = %.2f GHz\n',f/1e9);
+fprintf('Wavelength = %.4f m\n',lambda);
+
+fprintf('Direct Path Loss = %.2f dB\n',PL_direct);
+
+fprintf('Direct Received Power = %.2f dBm\n',Pr_direct);
+
+fprintf('\nIRS RESULTS:\n');
+
+for k = 1:length(N)
+
+    fprintf('N = %d | IRS Gain = %.2f dB | ', ...
+        N(k),IRS_gain(k));
+
+    fprintf('Received Power = %.2f dBm | ', ...
+        Pr_IRS(k));
+
+    fprintf('Improvement = %.2f dB\n', ...
+        Gain_improvement(k));
+
+end
+
+%% PLOT 1 - IRS ELEMENTS VS RECEIVED POWER
+figure;
+
+plot(N,Pr_IRS,'-o','LineWidth',2,'MarkerSize',7);
+
+hold on;
+
+yline(Pr_direct,'--','Direct Link');
+
+grid on;
+
+xlabel('Number of IRS Elements');
+ylabel('Received Power (dBm)');
+
+title('IRS Elements vs Received Power');
+
+legend('IRS-Assisted','Direct Link');
+
+%% PLOT 2 - IRS ELEMENTS VS GAIN IMPROVEMENT
+figure;
+
+plot(N,Gain_improvement,'-s','LineWidth',2,'MarkerSize',7);
+
+grid on;
+
+xlabel('Number of IRS Elements');
+ylabel('Gain Improvement (dB)');
+
+title('IRS Gain Improvement for 6G Communication');
+
+%% PLOT 3 - PATH LOSS VS DISTANCE
+distance = 10:10:200;
+
+PL = 20*log10(4*pi*distance/lambda);
+
+figure;
+
+plot(distance,PL,'-o','LineWidth',2,'MarkerSize',7);
+
+grid on;
+
+xlabel('Distance (m)');
+ylabel('Path Loss (dB)');
+
+title('6G High-Frequency Path Loss vs Distance');
+
+%% FINAL OUTPUT
+fprintf('\nSimulation completed successfully.\n');
+fprintf('All three graphs generated successfully.\n');
